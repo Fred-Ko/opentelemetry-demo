@@ -4,7 +4,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { UserRead } from './users/entities/user-read.entity';
-import { User } from './users/entities/user.entity';
+
+import { Events } from 'src/users/entities/event.entity';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -17,7 +18,7 @@ import { UsersModule } from './users/users.module';
       username: 'postgres',
       password: 'postgres',
       database: 'write_db',
-      entities: [User],
+      entities: [Events],
       synchronize: true,
     }),
     TypeOrmModule.forRoot({
@@ -33,7 +34,7 @@ import { UsersModule } from './users/users.module';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'graphql', 'schema.gql'),
       subscriptions: {
         'graphql-ws': true,
       },

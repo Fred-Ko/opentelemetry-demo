@@ -1,9 +1,9 @@
 import { CommandBus } from '@nestjs/cqrs';
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { CreateUserCommand } from './commands/impl/create-user.command';
-import { DeleteUserCommand } from './commands/impl/delete-user.command';
-import { UpdateUserCommand } from './commands/impl/update-user.command';
-import { User } from './entities/user.entity';
+import { CreateUserCommand } from '../commands/impl/create-user.command';
+import { DeleteUserCommand } from '../commands/impl/delete-user.command';
+import { UpdateUserCommand } from '../commands/impl/update-user.command';
+import { User } from '../entities/user.entity';
 
 @Resolver(() => User)
 export class UsersCommandResolver {

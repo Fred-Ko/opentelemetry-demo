@@ -1,40 +1,35 @@
-import { Inject, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ClientKafka } from '@nestjs/microservices';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserUpdatedEvent } from 'src/users/events/impl/user-updated.event';
-import { Repository } from 'typeorm';
-import { User } from '../../entities/user.entity';
+import { UserRepository } from 'src/users/repositories/user.repository';
 import { UpdateUserCommand } from '../impl/update-user.command';
 
 @CommandHandler(UpdateUserCommand)
 export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
   constructor(
-    @InjectRepository(User, 'write')
-    private usersRepository: Repository<User>,
     @Inject('KAFKA_SERVICE')
     private readonly kafkaClient: ClientKafka,
+    @Inject('UserRepository')
+    private readonly userRepository: UserRepository,
   ) {}
 
   async execute(command: UpdateUserCommand) {
-    const user = await this.usersRepository.findOne({
-      where: { id: command.id },
-    });
+    const user = await this.userRepository.findById(command.userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new Error('User not found');
     }
 
-    if (command.name) user.name = command.name;
-    if (command.email) user.email = command.email;
-
-    const updatedUser = await this.usersRepository.save(user);
+    user.updateUser(command.newName, command.newEmail);
+    await this.userRepository.save(user);
 
     this.kafkaClient.emit(
       'user.updated',
-      JSON.stringify(new UserUpdatedEvent(updatedUser.id, updatedUser.name, updatedUser.email)),
+      JSON.stringify(
+        new UserUpdatedEvent(user.getUserId(), user.getName(), user.getEmail()),
+      ),
     );
-    Logger.debug(`사용자 수정 이벤트 발송: ${updatedUser.id}`);
-
-    return updatedUser;
+    Logger.debug(`사용자 수정 이벤트 발송: ${user.getUserId()}`);
+    return user.getUserId();
   }
 }

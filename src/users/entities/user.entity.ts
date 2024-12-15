@@ -1,26 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-@Entity()
 export class User {
-  @Field(() => ID)
-  @PrimaryGeneratedColumn('uuid')
+  @Field(() => String)
   id: string;
-
-  @Field()
-  @Column()
+  @Field(() => String)
   name: string;
-
-  @Field()
-  @Column()
+  @Field(() => String)
   email: string;
-
-  @Field()
-  @Column()
-  password: string;
-
-  @Field()
-  @Column({ default: true })
-  isActive: boolean;
-} 
+}

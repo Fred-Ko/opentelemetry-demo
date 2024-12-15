@@ -1,40 +1,38 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ClientKafka } from '@nestjs/microservices';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/users/entities/user.entity';
-import type { Repository } from 'typeorm';
 import { UserCreatedEvent } from '../../events/impl/user-created.event';
 import { CreateUserCommand } from '../impl/create-user.command';
+import { UserAggregate } from 'src/users/aggregates/user.aggregate';
+import { UserRepository } from 'src/users/repositories/user.repository';
+import { v4 as uuidv4 } from 'uuid';
 
 @CommandHandler(CreateUserCommand)
 @Injectable()
 export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
   constructor(
-    @InjectRepository(User, 'write')
-    private usersRepository: Repository<User>,
     @Inject('KAFKA_SERVICE')
     private readonly kafkaClient: ClientKafka,
+    @Inject('UserRepository')
+    private readonly userRepository: UserRepository,
   ) {}
 
   async execute(command: CreateUserCommand) {
-    const user = {
-      name: command.name,
-      email: command.email,
-      password: command.password,
-    };
+    const { name, email } = command;
+    const user = new UserAggregate();
+    user.registerUser(uuidv4(), name, email);
 
-    const savedUser = await this.usersRepository.save(user);
+    await this.userRepository.save(user);
 
     // Kafka로 이벤트 발행
     this.kafkaClient.emit(
       'user.created',
       JSON.stringify(
-        new UserCreatedEvent(savedUser.id, savedUser.name, savedUser.email),
+        new UserCreatedEvent(user.getUserId(), name, email),
       ),
     );
-    Logger.debug(`사용자 생성 이벤트 발송: ${savedUser.id}`);
+    Logger.debug(`사용자 생성 이벤트 발송: ${user.getUserId()}`);
 
-    return savedUser;
+    return user.getUserId();
   }
 }
