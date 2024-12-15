@@ -1,0 +1,32 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type UserRead {
+  id: ID!
+  name: String!
+  email: String!
+  isActive: Boolean!
+  lastUpdated: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type User {
+  id: String!
+  name: String!
+  email: String!
+}
+
+type Query {
+  users: [UserRead!]!
+}
+
+type Mutation {
+  createUser(name: String!, email: String!, password: String!): User!
+  updateUser(id: String!, name: String, email: String): User!
+  deleteUser(id: String!): Boolean!
+}
