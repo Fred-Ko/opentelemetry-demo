@@ -1,33 +1,40 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { DiscoveryModule } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
+import { TracingModule } from 'src/monitoring/TracingModule';
 import { UsersModule } from 'src/users/users.module';
 import { UserReadEntity } from './users/entities/user-read.entity';
 import { UserEntity } from './users/entities/user.entity';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       name: 'write',
       type: 'postgres',
-      host: 'localhost',
-      port: 5434,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'write_db',
+      host: process.env.DB_WRITE_HOST,
+      port: parseInt(process.env.DB_WRITE_PORT, 10),
+      username: process.env.DB_WRITE_USERNAME,
+      password: process.env.DB_WRITE_PASSWORD,
+      database: process.env.DB_WRITE_DATABASE,
       entities: [UserEntity],
       synchronize: true,
     }),
     TypeOrmModule.forRoot({
       name: 'read',
       type: 'postgres',
-      host: 'localhost',
-      port: 5435,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'read_db',
+      host: process.env.DB_READ_HOST,
+      port: parseInt(process.env.DB_READ_PORT, 10),
+      username: process.env.DB_READ_USERNAME,
+      password: process.env.DB_READ_PASSWORD,
+      database: process.env.DB_READ_DATABASE,
       entities: [UserReadEntity],
       synchronize: true,
     }),
@@ -39,6 +46,9 @@ import { UserEntity } from './users/entities/user.entity';
       },
     }),
     UsersModule,
+    DiscoveryModule,
+    TracingModule,
   ],
+  providers: [],
 })
 export class AppModule {}

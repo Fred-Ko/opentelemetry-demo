@@ -18,9 +18,12 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Partitioners } from 'kafkajs';
+import { startTrace } from 'src/monitoring/trace';
+import { TracingInterceptor } from 'src/monitoring/TracingInterceptor';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  await startTrace();
   const app = await NestFactory.create(AppModule);
 
   app.connectMicroservice<MicroserviceOptions>(
@@ -42,7 +45,7 @@ async function bootstrap() {
     },
     { inheritAppConfig: true },
   );
-
+  app.useGlobalInterceptors(new TracingInterceptor());
   await app.startAllMicroservices();
 
   await app.listen(3333);
